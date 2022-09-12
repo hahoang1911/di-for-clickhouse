@@ -13,11 +13,11 @@ analytical dashboards with ease.
 
 ### Get installation files:
 
-- Git clone...
+- `git clone https://github.com/datainsider-co/di-for-clickhouse.git`
 - Or download our zipped installation file:
 
 ```shell
-curl ..../di4clickhouse.zip
+curl --output di4clickhouse.zip https://codeload.github.com/datainsider-co/di-for-clickhouse/zip/refs/heads/main
 unzip di4clickhouse.zip
 ```
 
