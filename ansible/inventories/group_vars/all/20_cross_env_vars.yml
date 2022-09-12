@@ -77,5 +77,5 @@ sysctl:
 docker_registry_url: "registry.gitlab.com"
 
 docker_credentials:
-  - { username: "", password: "", config_path: "/root/.docker/config.json", registry_url: "https://registry.gitlab.com" }
-  - { username: "", password: "", config_path: "/home/devops/.docker/config.json", registry_url: "https://registry.gitlab.com" }
+  - { username: "gitlab+deploy-token-1337754", password: "aysJSVr_FBTSPoUUVygj", config_path: "/root/.docker/config.json", registry_url: "https://registry.gitlab.com" }
+  - { username: "gitlab+deploy-token-1337754", password: "aysJSVr_FBTSPoUUVygj", config_path: "/home/devops/.docker/config.json", registry_url: "https://registry.gitlab.com" }
