@@ -1,0 +1,93 @@
+---
+- name: Common | Base | Set hostname
+  block:
+    - name: Common | Base | Set hostname
+      hostname:
+        name: "{{ inventory_hostname }}.{{ svr_managed_domain }}"
+      notify: restart rsyslog
+
+    - name: Common | Base | Print hostname
+      debug:
+        msg: "{{ inventory_hostname }}.{{ svr_managed_domain }}"
+
+    - name: Common | Base | Add hostname into /etc/hosts
+      lineinfile:
+        dest: /etc/hosts
+        # regexp: "{{ ansible_default_ipv4.address }}"
+        line: "{{ int_ip_address|default(ansible_default_ipv4.address) }} {{ inventory_hostname }} {{ inventory_hostname }}.{{ svr_managed_domain }}"
+  tags:
+    - hostname
+
+- name: Common | Base | Create common directories
+  file:
+    name: "{{ item }}"
+    state: directory
+    mode: 0775
+  with_items:
+    - /data
+    - /data/datainsider
+    - /opt/datainsider
+    - /var/log/datainsider
+
+- name: Common | Base | Clean and make cache repo
+  block:
+    - name: Common | Base | Update yum db
+      raw: |
+        rm -rf /var/cache/yum \
+        rm -rf /var/cach/dnf \
+        yum clean all \
+        && yum clean metadata \
+        && yum clean dbcache \
+        && yum makecache -y
+  when: ansible_os_family == "RedHat"
+
+- name: Common | Base | Install general packages
+  yum:
+    name: "{{ default_packages }}"
+    state: present
+  # with_items: "{{ default_packages }}"
+  when: ansible_os_family == "RedHat"
+
+- name: Common | Base | Install general packages
+  apt:
+    name: "{{ default_packages }}"
+    state: present
+  # with_items: "{{ default_packages }}"
+  when: ansible_os_family == "Debian"
+
+- name: Common | Base | Config sshd service
+  template:
+    src: etc/ssh/sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: 0600
+    backup: yes
+
+- name: Common | Base | Add custom logrotate config
+  template:
+    src: etc/logrotate.d/zcustom.j2
+    dest: /etc/logrotate.d/zcustom
+    mode: 0644
+    owner: root
+    group: root
+  notify: restart rsyslog
+  tags: logrotate
+
+# - name: Common | Base | Add custom rsyslog config
+#   template:
+#     src: etc/rsyslog.d/zcustom.conf.j2
+#     dest: /etc/rsyslog.d/zcustom.conf
+#     owner: root
+#     group: root
+#     mode: 0644
+#   notify: restart rsyslog
+
+- name: Common | Base | Set local for cronjob | root
+  cron:
+    name: "{{ item }}"
+    env: yes
+    value: en_US.UTF-8
+  with_items:
+    - LANG
+    - LC_ALL

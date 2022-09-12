@@ -1,0 +1,29 @@
+---
+docker_compose_services:
+  - mysql
+  - ssdb
+  - zookeeper
+  - clickhouse
+  - ch-jdbc-bridge
+  - kafka
+  - user-profile
+  - bi-service
+  - ingestion-service
+  - job-scheduler
+  - job-worker
+  - event-tracking-mw
+  - event-tracking-consumer
+  - web
+  - nginx
+
+
+## svc config
+clickhouse_max_connection: 4096
+clickhouse_path: /var/lib/clickhouse/
+clickhouse_tmp_path: /var/lib/clickhouse/tmp/
+clickhouse_user_files_path: /var/lib/clickhouse/user_files/
+clickhouse_listen_host: 0.0.0.0
+clickhouse_http_port: 8123
+clickhouse_tcp_port: 9000
+clickhouse_interserver_http_credentials_user: admin
+clickhouse_interserver_http_credentials_password: pass4admin

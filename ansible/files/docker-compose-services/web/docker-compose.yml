@@ -1,0 +1,17 @@
+version: '3.7'
+services:
+  datainsider-web:
+    image: registry.gitlab.com/datainsider/web:1.4.15
+    container_name: di-web
+    restart: always
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 30s
+
+networks:
+  default:
+    external:
+      name: di_network

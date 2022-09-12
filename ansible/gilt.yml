@@ -1,0 +1,5 @@
+- git: https://github.com/dw/mitogen.git
+  version: v0.3.3
+  files:
+    - src: ansible_mitogen
+      dst: utils/mitogen/ansible_mitogen/

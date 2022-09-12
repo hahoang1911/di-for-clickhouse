@@ -1,0 +1,5 @@
+#local3.*  @{{ syslog_server_sshd_ip }}
+#*.*       @{{ syslog_server_ip }}
+
+local3.*  @{{ graylog_logging_endpoint }}:5514;RSYSLOG_SyslogProtocol23Format
+*.*       @{{ graylog_logging_endpoint }}:5514;RSYSLOG_SyslogProtocol23Format

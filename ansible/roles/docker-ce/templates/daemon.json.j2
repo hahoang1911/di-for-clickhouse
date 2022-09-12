@@ -1,0 +1,23 @@
+{
+  {% if docker_logging_driver == "gelf" -%}
+  "log-driver": "gelf",
+  "log-opts": {
+    "gelf-address": "udp://{{ graylog_server }}:{{ graylog_gelf_udp_port }}"
+  },
+  {% else -%}
+  "log-driver": "{{ docker_logging_driver | default("journald") }}",
+  {% endif -%}
+
+  {% if  ansible_os_family == "Debian" -%}
+  "exec-opts": [
+     "native.cgroupdriver={{ docker_cgroupdriver|default("cgroupfs") }}"
+  ],
+  {% endif -%}
+  "storage-driver": "{{ docker_storage_driver|default("overlay2") }}",
+  {% if (ansible_os_family == "RedHat") and docker_storage_driver == "overlay2" -%}
+  "storage-opts": [
+    "overlay2.override_kernel_check=true"
+  ],
+  {% endif -%}
+  "graph": "/data/docker/data"
+}

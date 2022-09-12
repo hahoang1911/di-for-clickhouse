@@ -1,0 +1,92 @@
+---
+version: "3.5"
+
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: di-mysql
+    command: mysqld --user=root --verbose
+    restart: always
+    volumes:
+      - /opt/datainsider/mysql/conf:/etc/mysql/conf.d
+      - /data/datainsider/mysql:/var/lib/mysql
+    #ports:
+    #  - 3306:3306
+    environment:
+      MYSQL_USER: "di"
+      MYSQL_PASSWORD: "di@2020!"
+      MYSQL_ROOT_PASSWORD: "di@2020!"
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+  ssdb:
+    image: wendal/ssdb:latest
+    container_name: di-ssdb
+    #ports:
+    #  - 8888:8888
+    volumes:
+      - /opt/datainsider/ssdb/conf/ssdb.conf:/etc/ssdb.conf
+      - /data/datainsider/ssdb/data:/var/lib/ssdb/data
+    # command: /bin/bash -c "/usr/bin/ssdb-server -d /app/ssdb.conf"
+    restart: always
+  user-profile:
+    image: registry.gitlab.com/datainsider/user-profile:1.4.16
+    container_name: di-user-profile
+    restart: always
+    environment:
+      NAME: user-profile
+      MODE: production
+    volumes:
+      - /opt/datainsider/user-profile/conf:/app/conf
+      - /var/log/datainsider/user-profile:/app/logs
+  bi-service:
+    image: registry.gitlab.com/datainsider/bi-service:1.4.16
+    container_name: di-bi-service
+    restart: always
+    environment:
+      NAME: bi-service
+      MODE: production
+      HTTP_PORT: 8080
+    volumes:
+      - /opt/datainsider/bi-service/conf:/app/conf
+      - /var/log/datainsider/bi-service:/app/logs
+  ingestion-service:
+    image: registry.gitlab.com/datainsider/ingestion-service:1.4.16
+    container_name: di-ingestion-service
+    restart: always
+    environment:
+      NAME: ingestion-service
+      MODE: production
+      HTTP_PORT: 8489
+      THRIFT_PORT: 8487
+    volumes:
+      - /opt/datainsider/ingestion-service/conf:/app/conf
+      - /var/log/datainsider/ingestion-service:/app/logs
+  web:
+    image: registry.gitlab.com/datainsider/web:1.4.16
+    container_name: di-web
+    restart: always
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 30s
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /opt/datainsider/nginx/nginx_home/nginx.conf:/etc/nginx/nginx.conf
+      - /opt/datainsider/nginx/nginx_home/conf.d:/etc/nginx/conf.d
+      - /opt/datainsider/nginx/nginx_home/html:/var/www/html/public
+      - /var/log/datainsider/nginx:/var/log/nginx
+    command: /bin/bash -c "nginx -g 'daemon off;'"
+    ulimits:
+      nproc: 65535
+    restart: always
+
+networks:
+   default:
+     external:
+       name: di_network

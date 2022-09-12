@@ -1,0 +1,13 @@
+2022/07/19 07:25:49 [emerg] 1#1: host not found in upstream "di-web" in /etc/nginx/conf.d/datainsider.co.conf:18
+2022/07/19 07:25:51 [emerg] 1#1: host not found in upstream "di-web" in /etc/nginx/conf.d/datainsider.co.conf:18
+2022/07/19 07:25:53 [emerg] 1#1: host not found in upstream "di-web" in /etc/nginx/conf.d/datainsider.co.conf:18
+2022/07/19 07:25:56 [emerg] 1#1: host not found in upstream "di-web" in /etc/nginx/conf.d/datainsider.co.conf:18
+2022/07/19 07:25:58 [emerg] 1#1: host not found in upstream "di-web" in /etc/nginx/conf.d/datainsider.co.conf:18
+2022/07/19 07:26:01 [emerg] 1#1: host not found in upstream "di-web" in /etc/nginx/conf.d/datainsider.co.conf:18
+2022/07/19 07:26:05 [emerg] 1#1: host not found in upstream "di-web" in /etc/nginx/conf.d/datainsider.co.conf:18
+2022/07/19 07:26:13 [emerg] 1#1: host not found in upstream "di-web" in /etc/nginx/conf.d/datainsider.co.conf:18
+2022/07/19 07:26:28 [emerg] 1#1: host not found in upstream "di-web" in /etc/nginx/conf.d/datainsider.co.conf:18
+2022/07/19 07:26:55 [emerg] 1#1: host not found in upstream "di-web" in /etc/nginx/conf.d/datainsider.co.conf:18
+2022/07/19 07:27:48 [emerg] 1#1: host not found in upstream "di-web" in /etc/nginx/conf.d/datainsider.co.conf:18
+2022/07/19 07:28:49 [emerg] 1#1: host not found in upstream "di-web" in /etc/nginx/conf.d/datainsider.co.conf:18
+2022/07/19 07:29:50 [emerg] 1#1: host not found in upstream "di-event-tracking-mw" in /etc/nginx/conf.d/datainsider.co.conf:75

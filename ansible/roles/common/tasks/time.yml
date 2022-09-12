@@ -1,0 +1,25 @@
+---
+- name: Common | Time | Set timezone
+  timezone:
+    name: "{{ timezone | default('Asia/Saigon') }}"
+    hwclock: local
+  # notify:
+  #   - restart cron
+
+- name: Common | Time | Cronjob | Update datetime hourly to {{ ntp1_ip }}
+  cron:
+    name: "ntpdate hourly"
+    minute: "2"
+    job: "/usr/sbin/ntpdate {{ ntp1_ip }} >> /var/log/cron.ntpdate.log 2>&1"
+
+- name: Common | Time | Cronjob | Update datetime hourly to {{ ntp2_ip }}
+  cron:
+    name: "ntpdate hourly 2"
+    minute: "34"
+    job: "/usr/sbin/ntpdate {{ ntp2_ip }} >> /var/log/cron.ntpdate.log 2>&1"
+
+- name: Common | Time | Cronjob | Synchronize hardware time to system time
+  cron:
+    name: "hwclock synchronization"
+    minute: "46"
+    job: "/sbin/hwclock --systohc >/dev/null 2>&1"

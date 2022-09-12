@@ -1,0 +1,34 @@
+default_packages:
+  [
+    sshpass,
+    htop,
+    dstat,
+    ncdu,
+    bind-utils,
+    tmux,
+    lsof,
+    net-tools,
+    iotop,
+    nethogs,
+    git,
+    vim-enhanced,
+    ntpdate,
+    subversion,
+    rsync,
+    telnet,
+    nc,
+    net-snmp,
+    xinetd,
+    python-setuptools,
+    python-devel,
+    yum-plugin-versionlock,
+    bzip2,
+    NetworkManager,
+    chrony
+  ]
+
+obsolete_services: [acpid, restorecond, rpcgss, cups, sendmail, rpcbind, anacron, postfix]
+
+enabled_services: [network, NetworkManager, snmpd, xinetd, sshd, chronyd]
+
+iptables_save_command: "iptables-save > /etc/sysconfig/iptables"

@@ -1,0 +1,22 @@
+---
+- name: restart rsyslog
+  service: name=rsyslog state=restarted
+
+- name: restart cron
+  service: name=crond state=restarted
+
+- name: enable swap space
+  command: swapon -a
+
+- name: restart resolvconf
+  service: name=resolvconf state=restarted
+
+- name: reload sysctl
+  command: sysctl --system
+
+- name: reload NetworkManager
+  service: name=NetworkManager state=restarted
+
+- name: reboot reminder
+  debug:
+    msg: ">> NOTICE: reboot is required for some settings to be effected (selinux, ..)"

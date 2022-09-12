@@ -1,0 +1,74 @@
+---
+- name: Common | Post Install | Disable not used services
+  service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: no
+  with_items: "{{ obsolete_services }}"
+  ignore_errors: yes
+
+# private networking
+- name: Common | Post Install | NetworkManager - static dns
+  block:
+    - name: Common | Post Install | NetworkManager | create directory /etc/NetworkManager/conf.d if not exist
+      file:
+        path: /etc/NetworkManager/conf.d
+        state: directory
+        mode: 0755
+
+    - name: Common | Post Install | NetworkManager | Copy content to /etc/NetworkManager/conf.d/10-dns.conf file
+      copy:
+        content: |
+          [main]
+          dns=none
+        dest: /etc/NetworkManager/conf.d/10-dns.conf
+        mode: 0644
+      notify: reload NetworkManager
+  when: ansible_os_family == "RedHat" and ansible_distribution_version >= "7"
+  tags: resolver
+
+- name: Common | Post Install | Disable changing dns for network interface
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-{{ ansible_default_ipv4.interface }}
+    regexp: "^PEERDNS="
+    line: PEERDNS=no
+  when: ansible_os_family == "RedHat"
+
+- name: Common | Post Install |  Config private dns | Debian
+  template:
+    src: etc/resolv.conf.j2
+    dest: /etc/resolvconf/resolv.conf.d/head
+    mode: 0644
+  when: ansible_os_family == "Debian"
+  notify: restart resolvconf
+  tags: resolver
+
+- name: Common | Post Install | Config private dns | RedHat
+  template:
+    src: etc/resolv.conf.j2
+    dest: /etc/resolv.conf
+    mode: 0644
+  when: ansible_os_family == "RedHat"
+  tags: resolver
+
+- name: Common | Post Install | Install general packages
+  package:
+    name: "{{ default_packages }}"
+    state: present
+  ignore_errors: yes
+
+- name: Common | Post Install | Enable defaults services | RedHat
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items: "{{ enabled_services }}"
+  when: ansible_os_family == "RedHat"
+  ignore_errors: yes
+
+- name: Common | Post Install | Add excutable mode to /etc/rc.d/rc.local | RedHat
+  file:
+    path: /etc/rc.d/rc.local
+    mode: 0755
+    owner: root
+  when: ansible_os_family == "RedHat"

@@ -1,0 +1,50 @@
+Port 22
+Protocol 2
+ListenAddress 0.0.0.0
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+SyslogFacility AUTHPRIV
+LogLevel INFO
+LoginGraceTime 2m
+# PermitRootLogin prohibit-password
+PermitRootLogin yes
+StrictModes yes
+MaxAuthTries 3
+# RSAAuthentication yes
+PubkeyAuthentication yes
+AuthorizedKeysFile	.ssh/authorized_keys
+# RhostsRSAAuthentication no
+HostbasedAuthentication no
+IgnoreUserKnownHosts no
+IgnoreRhosts yes
+PermitEmptyPasswords no
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+UsePAM yes
+AcceptEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
+AcceptEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
+AcceptEnv LC_IDENTIFICATION LC_ALL
+AllowTcpForwarding yes
+X11Forwarding no
+PrintMotd yes
+PrintLastLog no
+TCPKeepAlive yes
+# UseLogin no
+UsePrivilegeSeparation yes
+PermitUserEnvironment no
+Compression delayed
+ClientAliveInterval 5
+ClientAliveCountMax 10
+UseDNS no
+PidFile /var/run/sshd.pid
+MaxStartups 10
+PermitTunnel no
+{% if ansible_os_family == "RedHat" %}
+Subsystem sftp internal-sftp
+{% elif ansible_os_family == "Debian" %}
+Subsystem sftp /usr/lib/openssh/sftp-server
+{% endif %}
+{% if sshd["sftp_only"] == 1 %}
+Match Group {{ sshd["group"] }}
+  ForceCommand internal-sftp
+{% endif %}

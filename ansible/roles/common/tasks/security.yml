@@ -1,0 +1,53 @@
+---
+- name: Common | Security | Limits | Raise fd soft limits
+  pam_limits:
+    dest: /etc/security/limits.conf
+    domain: "*"
+    limit_item: "nofile"
+    limit_type: "soft"
+    value: "{{ ulimit['nofile'] }}"
+
+- name: Common | Security | Limits | Raise fd hard limits
+  pam_limits:
+    dest: /etc/security/limits.conf
+    domain: "*"
+    limit_item: "nofile"
+    limit_type: "hard"
+    value: "{{ ulimit['nofile'] }}"
+
+- name: Common | Security | Limits | Raise nproc soft limits
+  pam_limits:
+    dest: /etc/security/limits.conf
+    domain: "*"
+    limit_item: "nproc"
+    limit_type: "soft"
+    value: "{{ ulimit['noproc'] }}"
+
+- name: Common | Security | Limits | Raise nproc hard limits
+  pam_limits:
+    dest: /etc/security/limits.conf
+    domain: "*"
+    limit_item: "nproc"
+    limit_type: "hard"
+    value: "{{ ulimit['noproc'] }}"
+
+- name: Common | Security | Disable selinux
+  selinux:
+    state: disabled
+  notify: reboot reminder
+  when: ansible_os_family == "RedHat"
+  ignore_errors: yes
+
+- name: Common | Security | Update pam.d_common-session | Debian
+  lineinfile:
+    dest: /etc/pam.d/common-session
+    regexp: "session.*required.*pam_limits.so"
+    line: "session  required  pam_limits.so"
+  when: ansible_os_family == "Debian"
+
+- name: Common | Security | Update pam.d_common-session-noninteractive | Debian
+  lineinfile:
+    dest: /etc/pam.d/common-session-noninteractive
+    regexp: "session.*required.*pam_limits.so"
+    line: "session  required  pam_limits.so"
+  when: ansible_os_family == "Debian"

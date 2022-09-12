@@ -1,0 +1,12 @@
+**/.venv
+**/.direnv
+**/cache
+**/.vscode
+.vault_pass.txt
+**/.retry
+**/.DS_Store
+**/__pycache__
+**/.pyc
+utils/**/*
+files/nginx/certs
+.idea/

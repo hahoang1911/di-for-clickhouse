@@ -1,0 +1,201 @@
+---
+- name: Include vars of users.yml
+  include_vars: "{{ item }}"
+  with_first_found:
+    - ../../inventories/10_{{ ansible_os_family }}_env_vars.yml
+  tags: [users, change_root_pass]
+
+- name: Include vars of users.yml
+  include_vars:
+    file: ../../inventories/users.yml
+  tags: [users, change_root_pass]
+
+- name: add groups
+  group:
+    name: "{{ item.key }}"
+    gid: "{{ item.value.uid }}"
+  with_dict: "{{ users }}"
+  when:
+    - inventory_hostname in item.value.host or "any" in item.value.host
+    - item.value.remove is not defined or not item.value.remove
+
+- name: add users
+  user:
+    name: "{{ item.key }}"
+    group: "{{ item.value.group | default(item.key) }}"
+    # gid: "{{ item.value.gid | default(item.value.uid) }}"
+    uid: "{{ item.value.uid }}"
+    shell: "{{ item.value.shell | default('/bin/bash') }}"
+    home: "{{ item.value.home | default('/home/' + item.key) }}"
+  with_dict: "{{ users }}"
+  when:
+    - inventory_hostname in item.value.host or "any" in item.value.host
+    - item.value.remove is not defined or not item.value.remove
+
+- name: Users | Remove user
+  user:
+    name: "{{ item.key }}"
+    group: "{{ item.value.group | default(item.key) }}"
+    # gid: "{{ item.value.gid | default(item.value.uid) }}"
+    uid: "{{ item.value.uid }}"
+    shell: "{{ item.value.shell | default('/bin/bash') }}"
+    home: "{{ item.value.home | default(omit) }}"
+    remove: yes
+    state: absent
+  with_dict: "{{ users }}"
+  when:
+    - inventory_hostname in item.value.host or "any" in item.value.host
+    - item.value.remove is defined and item.value.remove
+
+- name: set password for users
+  command: |
+    echo '{{ item.key }}':'{{ item.value.password }}'|/usr/sbin/chpasswd
+  with_dict: "{{ users }}"
+  when:
+    - inventory_hostname in item.value.host or "any" in item.value.host
+    - item.value.remove is not defined or not item.value.remove
+    - item.value.password is defined
+
+- name: add ssh public key
+  authorized_key:
+    user: "{{ item.key }}"
+    key: "{{ lookup('file', 'keys/{{ item.key }}.pub') }}"
+    exclusive: yes
+  with_dict: "{{ users }}"
+  when:
+    - inventory_hostname in item.value.host or "any" in item.value.host
+    - item.value.remove is not defined or not item.value.remove
+    - item.value.shell is not defined or item.value.shell != "/usr/sbin/nologin"
+
+- name: set permision for .ssh
+  file:
+    path: "{{ item.value.home|default('/home/' + item.key) }}/.ssh"
+    mode: 0700
+    owner: "{{ item.key }}"
+    group: "{{ item.key }}"
+  with_dict: "{{ users }}"
+  when:
+    - inventory_hostname in item.value.host or "any" in item.value.host
+    - item.value.remove is not defined or not item.value.remove
+    - item.value.shell is not defined or item.value.shell != "/usr/sbin/nologin"
+
+- name: set permision for .ssh/authorized_keys
+  file:
+    path: "{{ item.value.home|default('/home/' + item.key) }}/.ssh/authorized_keys"
+    mode: 0600
+    owner: "{{ item.key }}"
+    group: "{{ item.key }}"
+  with_dict: "{{ users }}"
+  when:
+    - inventory_hostname in item.value.host or "any" in item.value.host
+    - item.value.remove is not defined or not item.value.remove
+    - item.value.shell is not defined or item.value.shell != "/usr/sbin/nologin"
+
+- name: user can become root
+  template:
+    src: sudoer.j2
+    dest: /etc/sudoers.d/50-{{ item.value.uid }}
+    mode: 0440
+  with_dict: "{{ users }}"
+  when:
+    - inventory_hostname in item.value.host or "any" in item.value.host
+    - item.value.remove is not defined or not item.value.remove
+    - item.value.sudoer is defined
+
+- name: Generate password for user root
+  shell: python -c "import crypt,getpass; print(crypt.crypt('{{ root_password }}', crypt.mksalt(crypt.METHOD_SHA512)))"
+  register: root_password_hash
+  tags: [users, change_root_pass]
+
+- name: Printout password root
+  debug:
+    msg: "{{ root_password_hash }}"
+  tags: [users, change_root_pass]
+
+- name: Change password for user root
+  user:
+    name: root
+    update_password: always
+    password: "{{ root_password_hash.stdout }}"
+  tags: [users, change_root_pass]
+
+# - name: Change password for user root
+#   command: |-
+#     echo root:'{{ root_password }}'|/usr/sbin/chpasswd
+#   when: ansible_distribution != 'Debian'
+
+# No need to create symlink with CentOS, cause /etc/profile will read all *.sh files in /etc/profile.d
+- name: Copy custom profile to /etc/profile.d
+  template:
+    src: zcustom.sh.j2
+    dest: /etc/profile.d/zcustom.sh
+    mode: 0644
+  tags:
+    - custom_promt_ps1
+
+- name: Create symlink .bashrc for user root
+  file:
+    src: /etc/profile.d/zcustom.sh
+    dest: /root/.bashrc
+    state: link
+    owner: root
+    group: root
+    force: yes
+  when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+
+- name: Create symlink .bashrc for users
+  file:
+    src: /etc/profile.d/zcustom.sh
+    dest: "{{ item.value.home|default('/home/' + item.key) }}/.bashrc"
+    state: link
+    owner: "{{ item.key }}"
+    group: "{{ item.key }}"
+    force: yes
+  with_dict: "{{ users }}"
+  when:
+    - inventory_hostname in item.value.host or "any" in item.value.host
+    - item.value.remove is not defined or not item.value.remove
+    - item.value.shell is defined and item.value.shell != "/usr/sbin/nologin"
+
+- name: create /root/.ssh
+  file:
+    path: /root/.ssh
+    state: directory
+    mode: 0700
+    owner: root
+    group: root
+
+- name: copy authorized_key file for root user
+  synchronize:
+    src: keys/root.pub
+    dest: /root/.ssh/authorized_keys
+    perms: yes
+    owner: yes
+
+- name: change permision /root/.ssh/authorized_keys
+  file:
+    path: /root/.ssh/authorized_keys
+    mode: 0600
+    owner: root
+    group: root
+
+- name: set config vim editor for root
+  copy:
+    src: vimrc
+    dest: /root/.vimrc
+    owner: root
+    group: root
+    mode: 0640
+
+- name: set config for vim editor
+  copy:
+    src: vimrc
+    dest: "{{ item.value.home|default('/home/' + item.key) }}/.vimrc"
+    owner: "{{ item.key }}"
+    group: "{{ item.key }}"
+    mode: 0640
+  with_dict: "{{ users }}"
+  when:
+    - inventory_hostname in item.value.host or "any" in item.value.host
+    - item.value.remove is not defined or not item.value.remove
+    - item.value.shell is not defined or item.value.shell != "/usr/sbin/nologin"

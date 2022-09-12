@@ -1,0 +1,16 @@
+pre-commit
+ansible>=2.9,<=2.10
+ansible-lint>=5.3,<6.0
+virtualenv
+jmespath
+hvac
+netaddr
+urllib3==1.24
+docker
+docker-compose
+jinja2>=3.0
+python-gilt
+jsonschema<4,>=2.5.1
+websocket-client<1,>=0.32.0
+PyYAML<6,>=3.10
+

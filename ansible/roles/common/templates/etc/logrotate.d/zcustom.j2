@@ -1,0 +1,13 @@
+### This file is managed by ansible, manual change will be overwriten
+
+/var/log/*/*.log {
+    weekly
+    missingok
+    rotate 5
+    compress
+    notifempty
+    copytruncate
+    postrotate
+        /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
+    endscript
+}

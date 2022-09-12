@@ -1,0 +1,11 @@
+docker_logging_driver: journald
+docker_cgroupdriver: cgroupfs
+docker_storage_driver: overlay2
+docker_daemon_extra: ""
+
+docker_ce:
+  repo:
+    baseurl: "https://download.docker.com/linux/centos/$releasever/$basearch/stable"
+    gpgkey: "https://download.docker.com/linux/centos/gpg"
+    checksum: "sha256:6650718e0fe5202ae7618521f695d43a8bc051c539d7570f0edbfa5b4916f218"
+  pkgs: ["docker-ce", "yum-plugin-versionlock", "container-selinux", "docker-compose-plugin"]

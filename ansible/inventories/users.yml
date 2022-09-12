@@ -1,0 +1,23 @@
+---
+root_password: 'random_password_123'
+
+users:
+  ## sysadmin
+  linhng:
+    uid: 401
+    sudoer: true
+    host: ['any']
+  thiennk:
+    uid: 402
+    sudoer: true
+    host: ['any']
+  sangdn:
+    uid: 403
+    sudoer: true
+    host: ['any']
+
+  ## app + services
+  devops:
+    uid: 701
+    host: ['any']
+    shell: '/bin/bash'

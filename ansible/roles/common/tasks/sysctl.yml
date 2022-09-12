@@ -1,0 +1,7 @@
+---
+- name: Common | Sysctl | Apply custom sysctl tunning
+  template:
+    src: etc/sysctl.d/custom_sysctl.conf.j2
+    dest: /etc/sysctl.d/60-custom-tunning.conf
+    mode: 0644
+  notify: reload sysctl

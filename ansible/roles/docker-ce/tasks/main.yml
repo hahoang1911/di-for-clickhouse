@@ -1,0 +1,220 @@
+---
+- name: Docker CE | Check if docker already installed
+  stat:
+    path: /usr/bin/docker
+  register: docker_bin
+
+- name: Docker CE | Install docker | RedHat | CentOS
+  block:
+    - name: Docker CE | Install docker | RedHat | CentOS | Prepare directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0755
+      with_items: ["/data/docker/data", "/etc/docker"]
+
+    - name: Docker CE | Install docker | RedHat | CentOS | Add yum repository
+      yum_repository:
+        name: docker-ce-stable
+        description: Docker CE Stable
+        baseurl: "{{ docker_ce.repo.baseurl }}"
+        gpgcheck: yes
+        gpgkey: "{{ docker_ce.repo.gpgkey }}"
+
+    - name: Docker CE | Install docker | RedHat | CentOS | Install docker-ce
+      yum:
+        name: "{{ docker_ce.pkgs }}"
+        state: present
+
+    - name: Docker CE | Install docker | RedHat | CentOS | Check if docker version is locked
+      shell: |
+        set -o pipefail
+        yum versionlock list | grep docker
+      args:
+        executable: /bin/bash
+        warn: no
+      register: docker_ce_locked
+      failed_when: docker_ce_locked.rc > 1
+
+    - name: Docker CE | Install docker | RedHat | CentOS | Hold docker version
+      shell: "yum versionlock docker-ce*"
+      args:
+        executable: /bin/bash
+        warn: no
+      when: docker_ce_locked.rc == 1
+
+    - name: Docker CE | Install docker | RedHat | CentOS | Install python-pip
+      package:
+        name: [python-pip, python3-pip]
+        state: present
+
+    - name: Docker CE | Install docker | RedHat | CentOS | Install docker client lib for python2
+      pip:
+        name: [docker, docker-compose]
+        state: present
+        executable: pip
+
+    - name: Docker CE | Install docker | RedHat | CentOS | Install docker, docker-compose client lib for python3
+      pip:
+        name: [docker, docker-compose]
+        state: present
+        executable: pip3
+
+    - name: Docker CE | Install docker | RedHat | CentOS | Install docker-compose
+      pip:
+        name: docker-compose
+        state: present
+        executable: pip3
+
+  when: ansible_os_family == "RedHat" and ansible_distribution == "CentOS" and not docker_bin.stat.exists
+
+- name: Docker CE | Install docker | RedHat | Amazon
+  block:
+    - name: Docker CE | Install docker | RedHat | Amazon | Prepare directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0755
+      with_items: ["/data/docker/data", "/etc/docker"]
+
+    - name: Docker CE | Install docker | RedHat | Amazon | Install docker-ce
+      yum:
+        name: [containerd, docker]
+        state: present
+
+    - name: Docker CE | Install docker | RedHat | Amazon | Check if docker version is locked
+      shell: |
+        set -o pipefail
+        yum versionlock list | grep docker
+      args:
+        executable: /bin/bash
+        warn: no
+      register: docker_ce_locked
+      failed_when: docker_ce_locked.rc > 1
+
+    - name: Docker CE | Install docker | RedHat | Amazon | Hold docker version
+      shell: "yum versionlock docker-ce*"
+      args:
+        executable: /bin/bash
+        warn: no
+      when: docker_ce_locked.rc == 1
+
+    - name: Docker CE | Install docker | RedHat | Amazon | Install python-pip
+      package:
+        name: [python-pip, python3-pip]
+        state: present
+
+    - name: Docker CE | Install docker | RedHat | Amazon | Install docker client lib for python2
+      pip:
+        name: [docker, docker-compose]
+        state: present
+        executable: pip
+
+    - name: Docker CE | Install docker | RedHat | Amazon | Install docker client lib for python3
+      pip:
+        name: [docker, docker-compose]
+        state: present
+        executable: pip3
+
+    # - name: Docker CE | Install docker | RedHat | Amazon | Install docker-compose
+    #   pip:
+    #     name: docker-compose
+    #     state: present
+    #     executable: pip3
+
+  when: ansible_os_family == "RedHat" and ansible_distribution == "Amazon" and not docker_bin.stat.exists
+
+- name: Docker CE | Install docker | Debian
+  block:
+    - name: Docker CE | Install docker | Debian | Prepare directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0755
+      with_items: ["/data/docker/data", "/etc/docker"]
+
+    - name: Docker CE | Install docker | Debian | Install prerequisites for Docker repository
+      apt:
+        name: ['apt-transport-https', 'ca-certificates', 'curl', 'gnupg2', 'software-properties-common']
+        update_cache: yes
+
+    - name: Docker CE | Install docker | Debian | Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+
+    - name: Docker CE | Install docker | Debian | Add apt repository key
+      apt_key:
+        url: "https://download.docker.com/linux/ubuntu/gpg"
+        state: present
+
+    - name: Docker CE | Install docker | Debian | Add Docker APT repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/{{ ansible_system | lower }}/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable
+
+    - name: Docker CE | Install docker | Debian | Install docker
+      apt:
+        name: ['docker-ce', 'docker-compose-plugin', 'docker-ce-cli', 'containerd.io']
+        update_cache: yes
+
+    - name: Docker CE | Install docker | Debian | Install prerequisites for docker-compose
+      apt:
+        name: ['python3-pip', 'python3-setuptools', 'virtualenv']
+
+    - name: Docker CE | Install docker | Debian | Install docker-compose
+      pip:
+        name: docker-compose
+
+    - name: Docker CE | Install docker | Debian | Hold docker version
+      command: "apt-mark hold docker-ce-*"
+
+  when: ansible_os_family == "Debian" and not docker_bin.stat.exists
+
+- name: Docker CE | Install docker-compose
+  shell: |-
+    curl -L "https://github.com/docker/compose/releases/download/v2.8.0/docker-compose-$(uname -s| tr '[:upper:]' '[:lower:]')-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+
+- name: Docker CE | Apply docker daemon config
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    mode: 0644
+    # notify:
+    #   - restart docker
+
+- name: Docker CE | Update sysctl
+  sysctl:
+    name: "{{ item.key }}"
+    state: present
+    reload: yes
+    sysctl_file: /etc/sysctl.d/70-docker.conf
+    sysctl_set: yes
+    value: "{{ item.value }}"
+  with_items:
+    - {key: "net.bridge.bridge-nf-call-iptables", value: 1}
+    - {key: "net.bridge.bridge-nf-call-ip6tables", value: 1}
+    - {key: "net.ipv4.ip_forward", value: 1}
+  ignore_errors: yes
+
+- name: Docker CE | Ensure docker is running
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Docker CE | Cronjob | Cleanup docker images layers
+  cron:
+    name: cleanup docker images layers
+    special_time: daily
+    job: docker rmi $(docker images -f dangling=true -q) >> /var/log/cron.docker.clean.images.log 2>&1
+
+- name: Docker CE | Cronjob | Cleanup unused images
+  cron:
+    name: cleanup docker unused images
+    special_time: daily
+    job: docker image prune -a -f >> /var/log/cron.docker.clean.images.log 2>&1
+
+- name: Docker CE | Include options
+  include_tasks: options.yml
+  tags:
+    - docker_options

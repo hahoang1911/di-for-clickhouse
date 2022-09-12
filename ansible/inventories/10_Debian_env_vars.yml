@@ -1,0 +1,5 @@
+default_packages: [sshpass, rsync, htop, dstat, ncdu, dnsutils, tmux, lsof, net-tools, iotop, git, vim, ntp, ntpdate, resolvconf]
+
+obsolete_services: [atd, mdadm, ntp, snapd]
+
+iptables_save_command: "/etc/init.d/iptables-persistent save"

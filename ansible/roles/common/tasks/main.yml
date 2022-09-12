@@ -1,0 +1,23 @@
+---
+- name: Common | Import os variables
+  include_vars: ../../inventories/10_{{ ansible_os_family }}_env_vars.yml
+
+- name: Common | Setup basic configurations
+  import_tasks: base.yml
+  tags: base
+
+- name: Common | Setup security for services
+  import_tasks: security.yml
+  tags: security
+
+- name: Common | Tunning sysctl values
+  import_tasks: sysctl.yml
+  tags: sysctl
+
+- name: Common | Setup time synchonization
+  import_tasks: time.yml
+  tags: time
+
+- name: Common | Update system and disable unwanted services
+  import_tasks: post_install.yml
+  tags: post_install

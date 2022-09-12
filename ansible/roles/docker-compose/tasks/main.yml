@@ -1,0 +1,66 @@
+---
+- name: Create target directory
+  file: path=/opt/datainsider/{{ item.path }} state=directory mode=0755
+  with_items:
+    - { path: "clickhouse/conf"}
+    - { path: "bi-service/conf"}
+    - { path: "ingestion-service/conf"}
+    - { path: "user-profile/conf"}
+
+- name: Include clickhouse credentials
+  include_vars: clickhouse_credentials.yml
+
+- name: Docker Compose | Apply config templates
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0644
+    # owner: ec2-user
+    # group: ec2-user
+  with_items:
+    - { src: "{{ lookup('env', 'PWD') }}/files/docker-compose-services/bi-service/conf/production.conf.j2", dest: /opt/datainsider/bi-service/conf/production.conf }
+    - { src: "{{ lookup('env', 'PWD') }}/files/docker-compose-services/ingestion-service/conf/production.conf.j2", dest: /opt/datainsider/ingestion-service/conf/production.conf }
+    - { src: "{{ lookup('env', 'PWD') }}/files/docker-compose-services/user-profile/conf/production.conf.j2", dest: /opt/datainsider/user-profile/conf/production.conf }
+
+- name: Docker Compose | Create directories
+  block:
+    - name: Docker Compose | Create data services directories
+      file:
+        name: "/data/datainsider/{{ item }}"
+        state: directory
+        mode: 0775
+      loop: "{{ docker_compose_services }}"
+
+    - name: Docker Compose | Create var/log services directories
+      file:
+        name: "/var/log/datainsider/{{ item }}"
+        state: directory
+        mode: 0775
+      loop: "{{ docker_compose_services }}"
+  when: docker_compose_services is defined
+
+## TODO: replace 1st block
+- name: Docker Compose | Synchronize {{ docker_compose_services }} to remote
+  block:
+    - name: Docker Compose | Print out current working dir
+      debug:
+        msg: "{{ lookup('env', 'PWD') }}/files/docker-compose-services/"
+
+    - name: Docker Compose | Sync {{ docker_compose_services }} to remote
+      synchronize:
+        src: "{{ lookup('env', 'PWD') }}/files/docker-compose-services/"
+        dest: /opt/datainsider/
+        recursive: yes
+        owner: no
+        group: no
+  when: docker_compose_services is defined
+##
+
+- name: Docker Compose | Create and start services
+  docker_compose:
+    project_src: datainsider
+    files: /opt/datainsider/docker-compose.yml
+    pull: yes
+    state: present
+  register: docker_compose_services_output
+  when: docker_compose_services is defined
