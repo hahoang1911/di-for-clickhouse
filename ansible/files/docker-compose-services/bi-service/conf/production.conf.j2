@@ -100,6 +100,10 @@ database_schema {
       name = "cohort"
       fields = ["id", "name", "description", "organization_id", "creator_id", "owner_id", "created_time", "updated_time", "cohort"]
     }
+    rls_policy {
+      name = "rls_policy"
+      fields = ["policy_id", "org_id", "user_ids", "user_attribute", "db_name", "tbl_name", "conditions"]
+    }
   }
 }
 
@@ -208,4 +212,3 @@ tracking_client {
     table_name = "user_activities"
   }
 }
-
