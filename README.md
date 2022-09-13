@@ -44,3 +44,14 @@ password: 123456
 ```
 
 - Start using di4clickhouse.
+
+FAQs: 
+Do we support calculated field ? 
+Do we support measure ? 
+Do we support row level security ? 
+How to build dashboard ? 
+How to do adhoc analysis ? 
+How to present on big screen ? 
+How to share our work ? 
+
+Please check it more at: https://docs.datainsider.co/dashboard/chart-builder
