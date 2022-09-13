@@ -45,6 +45,11 @@ password: 123456
 
 - Start using di4clickhouse.
 
+
+### Sample installation video:
+[![Checkout sample installation video](https://img.youtube.com/vi/VAJBoZ0hdYA/maxresdefault.jpg)](https://youtu.be/VAJBoZ0hdYA)
+
+
 ### FAQs: 
 
 - Do we support calculated field ? 
