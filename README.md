@@ -47,7 +47,8 @@ password: 123456
 
 
 ### Sample installation video:
-[![Checkout sample installation video](https://img.youtube.com/vi/VAJBoZ0hdYA/maxresdefault.jpg)](https://youtu.be/VAJBoZ0hdYA)
+[<img src="https://img.youtube.com/vi/VAJBoZ0hdYA/maxresdefault.jpg" width="50%">](https://youtu.be/VAJBoZ0hdYA)
+
 
 
 ### FAQs: 
